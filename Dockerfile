@@ -18,6 +18,6 @@ COPY . .
 CMD ["python", "predictCV.py"]
 
 # DEPLOY TO CLOUD RUN:
-# docker build -t facemask .
-# docker tag facemask gcr.io/skinnie-project/facemask
-# docker push gcr.io/skinnie-project/facemask
+# docker build -t batikClassification .
+# docker tag batikClassification gcr.io/skinnie-project/batikClassification
+# docker push gcr.io/skinnie-project/batikClassification
