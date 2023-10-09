@@ -1,22 +1,23 @@
 from fastapi import FastAPI, File, UploadFile, Request
 from predict import proses
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 import uvicorn
 import os
 
 # python -m uvicorn predictCV:app --reload
 
 app = FastAPI()
+app.mount("/assets", StaticFiles(directory="assets"), name="assets")
 templates = Jinja2Templates(directory="templates")
-
 
 @app.get("/")
 def home(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse("index-2.html", {"request": request})
 
-@app.get('/hello')
-async def hello_world():
-    return "Model klasifikasi Masker"
+@app.get("/old")
+def home(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 @app.post("/prediksi")
 async def predict_image(file: UploadFile = File(...)):
