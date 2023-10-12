@@ -1,3 +1,4 @@
+import csv
 from PIL import Image
 from tensorflow.keras.applications.efficientnet import preprocess_input
 import numpy as np
@@ -9,15 +10,24 @@ def proses(file):
     jenis = ['Kawung', 'Megamendung', 'Parang', 'Sekarjagad', 'Truntum']
 
     image = Image.open(file.file)
+    image.save(f'saved_pictures/{file.filename}')
+
     image = preprocess_input(image)
     image = image.convert('RGB')
     image = image.resize((224,224))
     image = np.asarray(image)
     image = np.expand_dims(image,0)
-    # image = image/255.0
-    
+
     p = model_baru.predict(image)
     kelas = p.argmax(axis = 1)[0]
     label = jenis[kelas]
     conf = p[0][kelas]
+
+    # Write to CSV
+    with open('predictions.csv', 'a', newline='') as f:
+        writer = csv.writer(f)
+        if f.tell() == 0:
+            writer.writerow(['Image', 'Class', 'Probability'])
+        writer.writerow([file.filename, label, conf])
+
     return conf, label
