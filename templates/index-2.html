@@ -27,6 +27,46 @@
   <!-- Template Main CSS File -->
   <link href="assets/css/style.css" rel="stylesheet">
 
+  <style>
+    /* Style the modal */
+    .modal {
+      display: none; /* Hidden by default */
+      position: fixed; /* Stay in place */
+      z-index: 1; /* Sit on top */
+      left: 0;
+      top: 0;
+      width: 100%; /* Full width */
+      height: 100%; /* Full height */
+      overflow: auto; /* Enable scroll if needed */
+      background-color: rgb(0,0,0); /* Fallback color */
+      background-color: rgba(0,0,0,0.9); /* Black w/ 90% opacity */
+    }
+
+    /* Modal Content/Box */
+    .modal-content {
+      margin: 15% auto; /* 15% from the top and centered */
+      padding: 20px;
+      width: 60%; /* Could be more or less, depending on screen size */
+    }
+
+    /* The Close Button */
+    .close {
+      position: absolute;
+      right: 25px;
+      top: 0;
+      color: #fff;
+      font-size: 35px;
+      font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+      color: #888;
+      text-decoration: none;
+      cursor: pointer;
+    }
+  </style>
+
   <!-- =======================================================
   * Template Name: Ninestars
   * Updated: Sep 18 2023 with Bootstrap v5.3.2
@@ -70,15 +110,18 @@
           <h2>This application provides Batik Classification from user taken photo</h2>
           <div>
             <a href="#about" class="btn-get-started scrollto">Get Started</a>
-            <a href="#" class="btn-get-started scrollto" onclick="startRealTimeClassifier()">Real Time Classifier</a>
-            <div id="video-container">
-              <img id="video-feed" style="max-width: 100%; height: auto;">
-            </div>
+            <a href="#" class="btn-get-started scrollto" onclick="openVideoModal()">Real Time Classifier</a>
           </div>
         </div>
         <div class="col-lg-6 order-1 order-lg-2 hero-img">
           <img src="assets/img/batik.png" class="img-fluid animated" alt="">
         </div>
+      </div>
+    </div>
+
+    <div id="videoModal" class="modal" onclick="closeVideoModal(event)">
+      <div class="modal-content">
+        <img id="video-feed" src="/video_feed" width="640" height="480">
       </div>
     </div>
 
@@ -276,35 +319,24 @@
       };
   </script>
 
-<script>
-  let isClassifierRunning = false;
-
-  function startRealTimeClassifier() {
-      if (isClassifierRunning) {
-          return;  // Classifier is already running
-      }
-
-      isClassifierRunning = true;
-
-      // Create an image element to display the video feed
-      const videoFeed = document.getElementById('video-feed');
-      videoFeed.src = "/video_feed";  // The endpoint that streams the video
-
-      // Define the function to update the video feed
-      function updateVideoFeed() {
-          if (isClassifierRunning) {
-              videoFeed.src = "/video_feed";  // Re-initialize the video feed
-              setTimeout(updateVideoFeed, 1000);  // Call this function every 1 second
-          }
-      }
-
-      // Start updating the video feed
-      updateVideoFeed();
-  }
-</script>
 
   <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
+
+<script>
+  function openVideoModal() {
+    var modal = document.getElementById("videoModal");
+    modal.style.display = "block";
+  }
+
+  function closeVideoModal(event) {
+    var modal = document.getElementById("videoModal");
+    if (event.target === modal) {
+      modal.style.display = "none";
+    }
+  }
+</script>
+
 
 
 </body>

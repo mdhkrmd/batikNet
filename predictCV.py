@@ -2,12 +2,56 @@ from fastapi import FastAPI, File, UploadFile, Request
 from predict import proses
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import  StreamingResponse
 import uvicorn
 import os
+from tensorflow.keras.models import load_model
+import cv2
+import numpy as np
+from typing import Generator
+from PIL import Image
+import keras
+from tensorflow.keras.applications.efficientnet import preprocess_input
 
 app = FastAPI()
 app.mount("/assets", StaticFiles(directory="assets"), name="assets")
 templates = Jinja2Templates(directory="templates")
+
+# Load your model
+model_baru=load_model('effNetV2.h5')
+jenis = ['Kawung', 'Megamendung', 'Parang', 'Sekarjagad', 'Truntum']
+
+# OpenCV VideoCapture
+cap = cv2.VideoCapture(0)
+
+def video_feed_generator() -> Generator[bytes, None, None]:
+    while True:
+        _, gbr1 = cap.read()
+        gbr2 = cv2.cvtColor(gbr1, cv2.COLOR_BGR2RGB)
+        gbr = Image.fromarray(gbr2)
+
+        width, height = gbr.size
+        left = np.round((width - height) / 2)
+        right = left + height
+        gbr = gbr.crop((left, 0, right, height))
+        img = gbr.resize((224, 224))
+
+        img = np.expand_dims(img, axis=0)
+        gambar = preprocess_input(img)
+
+        y = model_baru.predict(gambar, verbose=0)
+        y = np.round(y)
+
+        if np.sum(y) == 1:
+            kelas = np.where(y[0] == 1)
+            cv2.putText(gbr1, jenis[kelas[0][0]], (100, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
+
+        _, buffer = cv2.imencode('.jpg', gbr1)
+        frame_bytes = buffer.tobytes()
+
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+
 
 @app.get("/")
 def home(request: Request):
@@ -16,6 +60,10 @@ def home(request: Request):
 @app.get("/old")
 def home(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
+
+@app.get("/video_feed")
+async def video_feed_endpoint():
+    return StreamingResponse(video_feed_generator(), media_type="multipart/x-mixed-replace; boundary=frame")
 
 @app.post("/prediksi")
 async def predict_image(file: UploadFile = File(...)):
