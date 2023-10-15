@@ -12,3 +12,5 @@ google-cloud-storage
 requests
 python-multipart
 jinja2
+mysql
+mysql-connector

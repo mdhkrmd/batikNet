@@ -5,8 +5,6 @@ from fastapi.staticfiles import StaticFiles
 import uvicorn
 import os
 
-# python -m uvicorn predictCV:app --reload
-
 app = FastAPI()
 app.mount("/assets", StaticFiles(directory="assets"), name="assets")
 templates = Jinja2Templates(directory="templates")
@@ -23,19 +21,19 @@ def home(request: Request):
 async def predict_image(file: UploadFile = File(...)):
     conf, label = proses(file)
     if label == "Megamendung":
-        info = "Megamendung is a batik motif with a cloud pattern that originates from Cirebon"
+        info = "Batik Megamendung berasal dari Cirebon, Jawa Barat. Motifnya berupa awan mendung yang digambarkan dengan gradasi warna. Filosofi batik Megamendung adalah kehidupan yang penuh perubahan, sedangkan maknanya adalah keabadian cinta dan kasih sayang."
         image = "assets\img\Megamendung.jpg"
     elif label == "Kawung":
-        info = "Batik Kawung originates from Yogyakarta. It is known to have a high philosophical value and is not only applied to cloth or clothing."
+        info = "Batik Kawung berasal dari Jawa Tengah. Motifnya berupa buah kawung yang digambarkan dengan pola geometris. Filosofi batik Kawung adalah kekuasaan dan kemakmuran, sedangkan maknanya adalah keberhasilan dan kemakmuran."
         image = "assets\img\Kawung.jfif"
     elif label == "Parang":
-        info = "Batik Parang is one of the oldest Indonesian batik motifs. It was worn by kings, leaders, and knights during the keraton Mataram Kartasura era in the 1600s."
+        info = "Batik Parang berasal dari Solo, Jawa Tengah. Motifnya berupa ombak laut yang digambarkan dengan pola geometris. Filosofi batik Parang adalah kekuatan dan keabadian, sedangkan maknanya adalah semangat perjuangan dan pantang menyerah."
         image = "assets\img\Parang.jpg"
     elif label == "Sekarjagad":
-        info = "The Sekar Jagad batik motif symbolizes all the diversity that exists in Indonesia and the world. It was developed in the 18th century."
+        info = "Batik Sekar Jagad berasal dari Yogyakarta. Motifnya berupa alam semesta yang digambarkan dengan berbagai macam flora dan fauna. Filosofi batik Sekar Jagad adalah keharmonisan dan keseimbangan alam, sedangkan maknanya adalah keindahan dan keajaiban alam semesta."
         image = "assets\img\Sekarjagad.jpg"
     elif label == "Truntum":
-        info = "Truntum is a batik motif that symbolizes growth. This motif, which originates from the Surakarta Sunanate, has a long history in the formation of this truntum motif."
+        info = "Batik Truntum berasal dari Yogyakarta. Motifnya berupa bunga truntum yang digambarkan dengan pola geometris. Filosofi batik Truntum adalah kesuburan dan kemakmuran, sedangkan maknanya adalah kebahagiaan dan cinta."
         image = "assets\img\Truntum.jpg"
     
     hasil = label + " ("+str(f"{conf*100:.2f}") + "%)" + "\n\n" + info + "\n\n"

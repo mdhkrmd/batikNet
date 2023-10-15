@@ -70,6 +70,10 @@
           <h2>This application provides Batik Classification from user taken photo</h2>
           <div>
             <a href="#about" class="btn-get-started scrollto">Get Started</a>
+            <a href="#" class="btn-get-started scrollto" onclick="startRealTimeClassifier()">Real Time Classifier</a>
+            <div id="video-container">
+              <img id="video-feed" style="max-width: 100%; height: auto;">
+            </div>
           </div>
         </div>
         <div class="col-lg-6 order-1 order-lg-2 hero-img">
@@ -272,6 +276,32 @@
       };
   </script>
 
+<script>
+  let isClassifierRunning = false;
+
+  function startRealTimeClassifier() {
+      if (isClassifierRunning) {
+          return;  // Classifier is already running
+      }
+
+      isClassifierRunning = true;
+
+      // Create an image element to display the video feed
+      const videoFeed = document.getElementById('video-feed');
+      videoFeed.src = "/video_feed";  // The endpoint that streams the video
+
+      // Define the function to update the video feed
+      function updateVideoFeed() {
+          if (isClassifierRunning) {
+              videoFeed.src = "/video_feed";  // Re-initialize the video feed
+              setTimeout(updateVideoFeed, 1000);  // Call this function every 1 second
+          }
+      }
+
+      // Start updating the video feed
+      updateVideoFeed();
+  }
+</script>
 
   <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
