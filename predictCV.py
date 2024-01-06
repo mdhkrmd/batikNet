@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, Request
+from fastapi import FastAPI, File, UploadFile, Request, HTTPException
 from predict import proses
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
@@ -12,6 +12,10 @@ from typing import Generator
 from PIL import Image
 import keras
 from tensorflow.keras.applications.efficientnet import preprocess_input
+import mysql.connector
+import time
+from datetime import datetime
+from pydantic import BaseModel
 
 app = FastAPI()
 app.mount("/assets", StaticFiles(directory="assets"), name="assets")
@@ -21,10 +25,13 @@ templates = Jinja2Templates(directory="templates")
 model_baru=load_model('effNetV2.h5')
 jenis = ['Kawung', 'Megamendung', 'Parang', 'Sekarjagad', 'Truntum']
 
-# OpenCV VideoCapture
-cap = cv2.VideoCapture(0)
 
 def video_feed_generator() -> Generator[bytes, None, None]:
+    # OpenCV VideoCapture
+    cap = cv2.VideoCapture(0)
+    upload_interval = 2  # Set the upload interval in seconds
+    last_upload_time = time.time()
+
     while True:
         _, gbr1 = cap.read()
         gbr2 = cv2.cvtColor(gbr1, cv2.COLOR_BGR2RGB)
@@ -40,18 +47,53 @@ def video_feed_generator() -> Generator[bytes, None, None]:
         gambar = preprocess_input(img)
 
         y = model_baru.predict(gambar, verbose=0)
-        y = np.round(y)
 
         if np.sum(y) == 1:
-            kelas = np.where(y[0] == 1)
-            cv2.putText(gbr1, jenis[kelas[0][0]], (100, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
+            kelas = np.argmax(y)
+            label = jenis[kelas]
+
+            # Get the probability for the predicted class
+            probabilitas = y[0][kelas]
+            if probabilitas >= 0.7:
+                teks = f'{label} - Probabilitas: {probabilitas:.2f}'
+                cv2.putText(gbr1, teks, (100, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
+
+                # Save the image locally
+                save_path = 'saved_pictures_video'
+                os.makedirs(save_path, exist_ok=True)
+                timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+                image_filename = f'{timestamp}_{label}_prob_{probabilitas:.2f}.jpg'
+                image_path = os.path.join(save_path, image_filename)
+                cv2.imwrite(image_path, gbr1)
+                print(f'Image saved: {image_path}')
+                
+                # Upload ke database
+                current_time = time.time()
+                if current_time - last_upload_time >= upload_interval:
+                    mydb = mysql.connector.connect(
+                        host="localhost",
+                        user="root",
+                        password="",
+                        database="batikclf"
+                    )
+
+                    mycursor = mydb.cursor()
+
+                    sql = "INSERT INTO predictvideo (label, conf) VALUES  (%s, %s)"
+                    val = (label, float(probabilitas))
+                    mycursor.execute(sql, val)
+
+                    mydb.commit()
+
+                    print(mycursor.rowcount, "record inserted.")
+
+                    last_upload_time = current_time
 
         _, buffer = cv2.imencode('.jpg', gbr1)
         frame_bytes = buffer.tobytes()
 
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
-
 
 @app.get("/")
 def home(request: Request):
@@ -69,27 +111,65 @@ async def video_feed_endpoint():
 async def predict_image(file: UploadFile = File(...)):
     conf, label = proses(file)
     if label == "Megamendung":
-        info = "Batik Megamendung berasal dari Cirebon, Jawa Barat. Motifnya berupa awan mendung yang digambarkan dengan gradasi warna. Filosofi batik Megamendung adalah kehidupan yang penuh perubahan, sedangkan maknanya adalah keabadian cinta dan kasih sayang."
+        info = "Megamendung batik comes from Cirebon, West Java. The pattern is cloudy clouds depicted with color gradations. The philosophy of Megamendung batik is a life entirely of change, while its meaning is the eternity of love and affection."
         image = "assets\img\Megamendung.jpg"
     elif label == "Kawung":
-        info = "Batik Kawung berasal dari Jawa Tengah. Motifnya berupa buah kawung yang digambarkan dengan pola geometris. Filosofi batik Kawung adalah kekuasaan dan kemakmuran, sedangkan maknanya adalah keberhasilan dan kemakmuran."
+        info = "Kawung batik comes from Central Java. The pattern is a kawung fruit depicted in a geometric pattern. The philosophy of Kawung batik is power and prosperity, while its meaning is success and prosperity."
         image = "assets\img\Kawung.jfif"
     elif label == "Parang":
-        info = "Batik Parang berasal dari Solo, Jawa Tengah. Motifnya berupa ombak laut yang digambarkan dengan pola geometris. Filosofi batik Parang adalah kekuatan dan keabadian, sedangkan maknanya adalah semangat perjuangan dan pantang menyerah."
+        info = "Parang Batik comes from Solo, Central Java. The pattern is sea waves depicted in geometric patterns. The philosophy of Parang batik is strength and eternity, while its meaning is the spirit of struggle and never giving up."
         image = "assets\img\Parang.jpg"
     elif label == "Sekarjagad":
-        info = "Batik Sekar Jagad berasal dari Yogyakarta. Motifnya berupa alam semesta yang digambarkan dengan berbagai macam flora dan fauna. Filosofi batik Sekar Jagad adalah keharmonisan dan keseimbangan alam, sedangkan maknanya adalah keindahan dan keajaiban alam semesta."
+        info = "Batik Sekar Jagad comes from Yogyakarta. The pattern is the universe depicted with various kinds of flora and fauna. The philosophy of Sekar Jagad batik is harmony and balance of nature, while its meaning is the beauty and wonder of the universe."
         image = "assets\img\Sekarjagad.jpg"
     elif label == "Truntum":
-        info = "Batik Truntum berasal dari Yogyakarta. Motifnya berupa bunga truntum yang digambarkan dengan pola geometris. Filosofi batik Truntum adalah kesuburan dan kemakmuran, sedangkan maknanya adalah kebahagiaan dan cinta."
+        info = "Truntum batik comes from Yogyakarta. The pattern is a truntum flower depicted in a geometric pattern. The philosophy of Truntum batik is fertility and prosperity, while its meaning is happiness and love."
         image = "assets\img\Truntum.jpg"
     
     hasil = label + " ("+str(f"{conf*100:.2f}") + "%)" + "\n\n" + info + "\n\n"
 
     return {"Text": hasil, "Image": image, "Label": label}
 
-
 # python -m uvicorn predictCV:app --reload
 if __name__ == '__main__':
     # nanti di cloud run samain juga CONTAINER PORT -> 3000
     uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 3000))) 
+    
+# ================================
+# class DataPayload(BaseModel):
+#     label: str
+#     probability: float
+
+# @app.post("/upload_to_database")
+# async def upload_to_database(data: DataPayload):
+#     label = data.label
+#     probability = data.probability
+
+#     cap = cv2.VideoCapture(0)
+#     _, gbr1 = cap.read()
+#     save_path = 'saved_pictures_video'
+#     os.makedirs(save_path, exist_ok=True)
+#     timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+#     image_filename = f'{timestamp}_{label}_prob_{probability:.2f}.jpg'
+#     image_path = os.path.join(save_path, image_filename)
+#     cv2.imwrite(image_path, gbr1)
+#     print(f'Image saved: {image_path}')
+    
+#     mydb = mysql.connector.connect(
+#                         host="localhost",
+#                         user="root",
+#                         password="",
+#                         database="batikclf"
+#                     )
+
+#     mycursor = mydb.cursor()
+
+#     sql = "INSERT INTO predictvideo (label, conf) VALUES  (%s, %s)"
+#     val = (label, float(probability))
+#     mycursor.execute(sql, val)
+
+#     mydb.commit()
+
+#     print(mycursor.rowcount, "record inserted.")
+
+#     return {"status": "success"}

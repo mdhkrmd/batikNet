@@ -1,0 +1,23 @@
+Pendahuluan
+==========
+[1]  
+
+Penelitian yang Terkait
+==========
+[13] 
+
+Metode Penelitian
+==========
+a. Dataset
+	[20] https://www.kaggle.com/datasets/abdallahalidev/plantvillage-dataset
+b. Convolutional Neural Network
+	1. [21] An Introduction to Convolutional Neural Networks
+	2. [22] Deep Learning using Rectified Linear Units (ReLU)
+	3. [23] Klasifikasi Citra Virus SARS-COV Menggunakan Deep Learning
+c. EfficientNetV2
+	1. [24] A Review of Deep Transfer Learning and Recent Advancements
+	2. [25] EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks
+	3. [26] EfficientNetV2: Smaller Models and Faster Training
+e. Evaluation
+	1.
+	2.

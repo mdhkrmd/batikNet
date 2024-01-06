@@ -46,7 +46,7 @@
     .modal-content {
       margin: 15% auto; /* 15% from the top and centered */
       padding: 20px;
-      width: 60%; /* Could be more or less, depending on screen size */
+      width: 52%; /* Could be more or less, depending on screen size */
     }
 
     /* The Close Button */
@@ -111,6 +111,8 @@
           <div>
             <a href="#about" class="btn-get-started scrollto">Get Started</a>
             <a href="#" class="btn-get-started scrollto" onclick="openVideoModal()">Real Time Classifier</a>
+            <!-- Tombol Baru -->
+            <!-- <button class="btn-get-started" onclick="uploadToDatabase()">Upload to Database</button> -->
           </div>
         </div>
         <div class="col-lg-6 order-1 order-lg-2 hero-img">
@@ -272,6 +274,31 @@
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 
+  <!-- <script>
+    function uploadToDatabase() {
+        // Menggunakan fetch API untuk membuat permintaan ke endpoint atau skrip server
+        fetch('/upload_to_database', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                label: lastLabel,
+                probability: lastProbability,
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Success:', data);
+            alert('Data sent to database successfully!');
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+            alert('Error sending data to the database.');
+        });
+    }
+</script> -->
+  
   <script>
     function resetImage() {
       document.getElementById('output').src = '';
